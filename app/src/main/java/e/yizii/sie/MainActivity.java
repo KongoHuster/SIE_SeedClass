@@ -36,10 +36,11 @@ public class MainActivity extends AppCompatActivity {
                 if (buttonSet == true)
                 {
                     button.setText("关闭闪关灯");
-                    for (int i =0; i < 5; i++)
+                    for (int i =0; i < 10; i++)
                     {
                         startCamera();
-                        SystemClock.sleep(10);
+//                        SystemClock.sleep(1000);
+
 
                     }
 
