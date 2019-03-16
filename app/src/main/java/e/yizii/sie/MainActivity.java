@@ -2,7 +2,6 @@ package e.yizii.sie;
 
 import android.Manifest;
 import android.content.pm.PackageManager;
-import android.hardware.Camera;
 import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
@@ -12,20 +11,23 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.Toast;
 
 import java.io.IOException;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 
 public class MainActivity extends AppCompatActivity {
 
-    private Camera mCamera = null;
-    private Camera.Parameters mParameters = null;
     boolean buttonSet = true;
     private static final String TAG = "MainActivity";
     private Button button;
     private ImageView imageView;
     private Boolean Stop = false;
+    private EditText editText;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -38,17 +40,36 @@ public class MainActivity extends AppCompatActivity {
             }
         }
 
-
+        editText = findViewById(R.id.editText2);
         imageView = findViewById(R.id.image1);
         button.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 if (buttonSet == true)
                 {
+                    String input = editText.getText().toString();
+                    if (input.isEmpty())
+                    {
+                        Toast.makeText(getApplication().getApplicationContext(), "输入字符为空，请输入两个汉字", Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+
+                    if (input.length() != 2)
+                    {
+                        Toast.makeText(getApplication().getApplicationContext(), "请输入两个汉字", Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+
+                    if (!isChinese(input))
+                    {
+                        Toast.makeText(getApplication().getApplicationContext(), "请输入两个汉字", Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+
                     button.setText("关闭");
                     Stop = false;
                     Font16 font16 = new Font16(getApplication().getApplicationContext());
                     try {
-                        final boolean[][] arr = font16.drawString("我们");
+                        final boolean[][] arr = font16.drawString(input);
 
                         imageView.setVisibility(View.VISIBLE);
                         Looper looper = Looper.myLooper();//取得当前线程里的looper
@@ -63,7 +84,6 @@ public class MainActivity extends AppCompatActivity {
                                     for (int j = 0; j < arr[0].length; j++) {
                                         mHandler.removeMessages(0);
                                         if (arr[i][j] == true)
-//                                        if (i % 2 ==0)
                                         {
                                             msgStr[0] = "black";
                                         }else {
@@ -91,29 +111,12 @@ public class MainActivity extends AppCompatActivity {
 
                     button.setText("打开");
                     imageView.setVisibility(View.INVISIBLE);
-//                    closeCamera();
                     buttonSet = true;
                     Stop = true;
                 }
 
             }
         });
-    }
-
-    private void startCamera(){
-        mCamera = Camera.open();
-        mParameters = mCamera.getParameters();
-        mParameters.setFlashMode(Camera.Parameters.FLASH_MODE_TORCH);
-        mCamera.setParameters(mParameters);
-
-    }
-
-    private void closeCamera(){
-        mParameters.setFlashMode(Camera.Parameters.FLASH_MODE_OFF);
-        mCamera.setParameters(mParameters);
-        mCamera.stopPreview();
-        mCamera.release();
-        mCamera = null;
     }
 
     private class MyHandler extends Handler{
@@ -124,29 +127,25 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public void handleMessage(Message msg) {//处理消息
          Log.d(TAG, "handleMessage: ");
-         String string = (String) msg.obj;
          if (msg.obj.toString().equals("black"))
          {
-             imageView.setImageResource(R.drawable.withe);
+             imageView.setImageResource(R.mipmap.withe);
          }else {
-             imageView.setImageResource(R.drawable.timg);
+             imageView.setImageResource(R.mipmap.timg);
          }
-//            Log.d(TAG, "handleMessage: " + msg.obj.toString());
-//            text.setText(msg.obj.toString());
-        }
 
+        }
     }
 
-//    class Mythread extends Thread{
-//        Mythread(){
-//
-//        }
-//
-//        @Override
-//        public void run(){
-//
-//        }
-//    }
-//
+    public static boolean isChinese(String str) {
+        String regEx = "[\u4e00-\u9fa5]";
+        Pattern pat = Pattern.compile(regEx);
+        Matcher matcher = pat.matcher(str);
+        boolean flg = false;
+        if (matcher.find())
+            flg = true;
+
+        return flg;
+    }
 
 }
