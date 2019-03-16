@@ -9,6 +9,7 @@ import android.os.Looper;
 import android.os.Message;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
@@ -61,7 +62,8 @@ public class MainActivity extends AppCompatActivity {
                                 {
                                     for (int j = 0; j < arr[0].length; j++) {
                                         mHandler.removeMessages(0);
-                                        if (arr[i][j] = true)
+                                        if (arr[i][j] == true)
+//                                        if (i % 2 ==0)
                                         {
                                             msgStr[0] = "black";
                                         }else {
@@ -121,7 +123,9 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         public void handleMessage(Message msg) {//处理消息
-         if (msg.obj.toString().equals("white"))
+         Log.d(TAG, "handleMessage: ");
+         String string = (String) msg.obj;
+         if (msg.obj.toString().equals("black"))
          {
              imageView.setImageResource(R.drawable.withe);
          }else {

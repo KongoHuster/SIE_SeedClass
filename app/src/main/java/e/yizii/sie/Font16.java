@@ -1,8 +1,6 @@
 package e.yizii.sie;
 
 import android.content.Context;
-import android.os.Environment;
-import android.util.Log;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -62,16 +60,16 @@ public class Font16 {
     protected byte[] read(int areaCode, int posCode) throws IOException {
         byte[] data = null;
 //        try {
-            int area = areaCode - 0xa0;
-            int pos = posCode - 0xa0;
+        int area = areaCode - 0xa0;
+        int pos = posCode - 0xa0;
 
-            InputStream in = context.getResources().openRawResource(R.raw.hzk16);
+        InputStream in = context.getResources().openRawResource(R.raw.hzk16);
 
-            long offset = all_32_128 * ((area - 1) * 94 + pos - 1);
-            in.skip(offset);
-            data = new byte[all_32_128];
-            in.read(data, 0, all_32_128);
-            in.close();
+        long offset = all_32_128 * ((area - 1) * 94 + pos - 1);
+        in.skip(offset);
+        data = new byte[all_32_128];
+        in.read(data, 0, all_32_128);
+        in.close();
 //        } catch (Exception ex) {
 //
 //        }
