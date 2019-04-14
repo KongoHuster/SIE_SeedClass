@@ -71,6 +71,15 @@ public class MainActivity extends AppCompatActivity {
                     try {
                         final boolean[][] arr = font16.drawString(input);
 
+//                        for (int i = 0; i < arr.length; i++) {
+//                            if (i%2 == 0)
+//                            {
+//                                arr[i] = false;
+//                            }else
+//                            {
+//                                arr[i] = Ture;
+//                            }
+//                        }
                         imageView.setVisibility(View.VISIBLE);
                         Looper looper = Looper.myLooper();//取得当前线程里的looper
 
@@ -81,6 +90,28 @@ public class MainActivity extends AppCompatActivity {
                             public void run(){
                                 for (int i = 0; i < arr.length && Stop == false; i++)
                                 {
+                                    //添加0x55
+                                    int head = 0x55;
+                                    while (head != 0x00)
+                                    {
+                                        mHandler.removeMessages(0);
+                                        if ((head & 0x01) == 0x01)
+                                        {
+                                            msgStr[0] = "black";
+                                        }else {
+                                            msgStr[0] = "white";
+                                        }
+                                        Message m = mHandler.obtainMessage(1, 1, 1, msgStr[0]);//构造要传递的消息
+                                        mHandler.sendMessage(m);//发送消息:系统会自动调用handleMessage方法来处理消息
+                                        try {
+                                            Thread.sleep(100);
+                                        } catch (InterruptedException e) {
+                                            e.printStackTrace();
+                                        }
+                                        head = head >> 1;
+                                    }
+
+
                                     for (int j = 0; j < arr[0].length; j++) {
                                         mHandler.removeMessages(0);
                                         if (arr[i][j] == true)
@@ -96,6 +127,27 @@ public class MainActivity extends AppCompatActivity {
                                         } catch (InterruptedException e) {
                                             e.printStackTrace();
                                         }
+                                    }
+
+                                    //添加0x55
+                                    int end = 0x0D;
+                                    while (end != 0x00)
+                                    {
+                                        mHandler.removeMessages(0);
+                                        if ((end & 0x01) == 0x01)
+                                        {
+                                            msgStr[0] = "black";
+                                        }else {
+                                            msgStr[0] = "white";
+                                        }
+                                        Message m = mHandler.obtainMessage(1, 1, 1, msgStr[0]);//构造要传递的消息
+                                        mHandler.sendMessage(m);//发送消息:系统会自动调用handleMessage方法来处理消息
+                                        try {
+                                            Thread.sleep(100);
+                                        } catch (InterruptedException e) {
+                                            e.printStackTrace();
+                                        }
+                                        head = head >> 1;
                                     }
                                 }
                             }
