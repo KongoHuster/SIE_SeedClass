@@ -2,6 +2,7 @@ package e.yizii.sie;
 
 import android.Manifest;
 import android.content.pm.PackageManager;
+import android.hardware.Camera;
 import android.icu.util.Measure;
 import android.os.Build;
 import android.os.Handler;
@@ -20,28 +21,31 @@ import java.io.IOException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import javax.crypto.spec.OAEPParameterSpec;
+
 
 public class MainActivity extends AppCompatActivity {
 
     boolean buttonSet = true;
     private static final String TAG = "MainActivity";
-    private Button button1, button2;
+    private Button button1, button2,button3;
     private ImageView imageView;
     private Boolean Stop = false;
     private EditText editText,editText3;
+    private Camera m_Camera;
+    private String Withe = "white";
+    private String Black = "black";
+    private Camera.Parameters mParameters;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
         button1 = findViewById(R.id.button);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            if (checkSelfPermission(Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
-                requestPermissions(new String[] {Manifest.permission.CAMERA}, 1);
-            }
-        }
-
         button2 = findViewById(R.id.button2);
+        button3 = findViewById(R.id.button3);
+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             if (checkSelfPermission(Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
                 requestPermissions(new String[] {Manifest.permission.CAMERA}, 1);
@@ -98,9 +102,11 @@ public class MainActivity extends AppCompatActivity {
 
                                 for (int i = 0; i < result.length; i++) {
                                     if (result[i] == true) {
-                                        msgStr[0] = "black";
+                                        msgStr[0] = Withe;
+//                                        OpenCamera();
                                     } else {
-                                        msgStr[0] = "white";
+                                        msgStr[0] = Black;
+//                                        CloseCamera();
                                     }
                                     Message m = mHandler.obtainMessage(1, 1, 1, msgStr[0]);//构造要传递的消息
                                     mHandler.sendMessage(m);//发送消息:系统会自动调用handleMessage方法来处理消息
@@ -120,14 +126,16 @@ public class MainActivity extends AppCompatActivity {
                                         mHandler.removeMessages(0);
                                         if (arr[i][j] == true)
                                         {
-                                            msgStr[0] = "black";
+                                            msgStr[0] = Withe;
+//                                            OpenCamera();
                                         }else {
-                                            msgStr[0] = "white";
+                                            msgStr[0] = Black;
+//                                            CloseCamera();
                                         }
                                         Message m = mHandler.obtainMessage(1, 1, 1, msgStr[0]);//构造要传递的消息
                                         mHandler.sendMessage(m);//发送消息:系统会自动调用handleMessage方法来处理消息
                                         try {
-                                            Thread.sleep(25);
+                                            Thread.sleep(50);
                                         } catch (InterruptedException e) {
                                             e.printStackTrace();
                                         }
@@ -141,14 +149,16 @@ public class MainActivity extends AppCompatActivity {
 
                                 for (int i = 0; i < result.length; i++) {
                                     if (result[i] == true) {
-                                        msgStr[0] = "black";
+                                        msgStr[0] = Withe;
+//                                        OpenCamera();
                                     } else {
-                                        msgStr[0] = "white";
+                                        msgStr[0] = Black;
+//                                        CloseCamera();
                                     }
                                     Message m = mHandler.obtainMessage(1, 1, 1, msgStr[0]);//构造要传递的消息
                                     mHandler.sendMessage(m);//发送消息:系统会自动调用handleMessage方法来处理消息
                                     try {
-                                        Thread.sleep(200);
+                                        Thread.sleep(50);
                                     } catch (InterruptedException e) {
                                         e.printStackTrace();
                                     }
@@ -163,8 +173,8 @@ public class MainActivity extends AppCompatActivity {
                     }
 
                 }else {
-
                     button1.setText("打开");
+//                    CloseCamera();
                     imageView.setVisibility(View.INVISIBLE);
                     buttonSet = true;
                     Stop = true;
@@ -192,6 +202,7 @@ public class MainActivity extends AppCompatActivity {
                             buttonSet = false;
 
                             int texthead = 0x55;
+                            OpenCameraTure();
                             boolean[] result = hexToBool(texthead);
                             mHandler.removeMessages(0);
                             textHandler.removeMessages(0);
@@ -200,9 +211,12 @@ public class MainActivity extends AppCompatActivity {
 
                             for (int i = 0; i < result.length; i++) {
                                 if (result[i] == true) {
-                                    msgStr[0] = "black";
+//                                    OpenCameraTure();
+                                    OpenCamera();
+                                    msgStr[0] = Withe;
                                 } else {
-                                    msgStr[0] = "white";
+                                    msgStr[0] = Black;
+                                    CloseCamera();
                                 }
                                 Message m = mHandler.obtainMessage(1, 1, 1, msgStr[0]);//构造要传递的消息
                                 mHandler.sendMessage(m);//发送消息:系统会自动调用handleMessage方法来处理消息
@@ -224,9 +238,13 @@ public class MainActivity extends AppCompatActivity {
 
                                     for (int i = 0; i < result.length; i++) {
                                         if (result[i] == true) {
-                                            msgStr[0] = "black";
+                                            msgStr[0] = Withe;
+//                                            OpenCameraTure();
+
+                                            OpenCamera();
                                         } else {
-                                            msgStr[0] = "white";
+                                            msgStr[0] = Black;
+                                            CloseCamera();
                                         }
                                         Message m = mHandler.obtainMessage(1, 1, 1, msgStr[0]);//构造要传递的消息
                                         mHandler.sendMessage(m);//发送消息:系统会自动调用handleMessage方法来处理消息
@@ -252,9 +270,11 @@ public class MainActivity extends AppCompatActivity {
 
                             for (int i = 0; i < result.length; i++) {
                                 if (result[i] == true) {
-                                    msgStr[0] = "black";
+                                    msgStr[0] = Withe;
+                                    OpenCamera();
                                 } else {
-                                    msgStr[0] = "white";
+                                    msgStr[0] = Black;
+                                    CloseCamera();
                                 }
                                 Message m = mHandler.obtainMessage(1, 1, 1, msgStr[0]);//构造要传递的消息
                                 mHandler.sendMessage(m);//发送消息:系统会自动调用handleMessage方法来处理消息
@@ -274,6 +294,7 @@ public class MainActivity extends AppCompatActivity {
                 }else {
                     button2.setText("测试");
                     imageView.setVisibility(View.INVISIBLE);
+                    CloseCameraTure();
                     textHandler.removeMessages(0);
                     Message message = textHandler.obtainMessage(1, 1, 1, "0x0");
                     textHandler.sendMessage(message);
@@ -283,6 +304,41 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        button3.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                    Looper looper = Looper.myLooper();//取得当前线程里的looper
+                    final MyHandler mHandler = new MyHandler(looper);//构造一个handler使之可与looper通信
+                    final textHandler textHandler = new textHandler(looper);//构造一个handler使之可与looper通信
+                    if (buttonSet == true) {
+                        button3.setText("关闭");
+                        imageView.setVisibility(View.VISIBLE);
+                        final String[] msgStr = {""};
+                        mHandler.removeMessages(0);
+                        textHandler.removeMessages(0);
+                        Message message = textHandler.obtainMessage(1, 1, 1, "0x" + Integer.toHexString(0x01));
+                        textHandler.sendMessage(message);
+
+//                        OpenCameraTure();
+                        OpenCamera();
+
+                        msgStr[0] = Withe;
+                        Message m = mHandler.obtainMessage(1, 1, 1, msgStr[0]);//构造要传递的消息
+                        mHandler.sendMessage(m);
+                        buttonSet = false;
+
+                    }else {
+                        button3.setText("常亮");
+                        imageView.setVisibility(View.INVISIBLE);
+//                        CloseCamera();
+                        textHandler.removeMessages(0);
+                        Message message = textHandler.obtainMessage(1, 1, 1, "0x0");
+                        textHandler.sendMessage(message);
+                        buttonSet = true;
+                        Stop = true;
+                    }
+            }
+
+        });
 }
 
     private class MyHandler extends Handler{
@@ -293,7 +349,7 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public void handleMessage(Message msg) {//处理消息
          Log.d(TAG, "handleMessage: ");
-         if (msg.obj.toString().equals("black"))
+         if (msg.obj.toString().equals(Withe))
          {
              imageView.setImageResource(R.mipmap.withe);
          }else {
@@ -342,4 +398,43 @@ public class MainActivity extends AppCompatActivity {
         return result;
     }
 
+
+    public void OpenCamera() {
+        try{
+//            m_Camera = Camera.open();
+//            Camera.Parameters mParameters;
+//            mParameters = m_Camera.getParameters();
+            mParameters.setFlashMode(Camera.Parameters.FLASH_MODE_TORCH);
+            m_Camera.setParameters(mParameters);
+        } catch(Exception ex){}
+
+
+    }
+
+    public void CloseCamera() {
+        try{
+//            Camera.Parameters mParameters;
+//            mParameters = m_Camera.getParameters();
+            mParameters.setFlashMode(Camera.Parameters.FLASH_MODE_OFF);
+            m_Camera.setParameters(mParameters);
+//            m_Camera.release();
+        } catch(Exception ex){}
+    }
+
+    public void OpenCameraTure()
+    {
+        try{
+            m_Camera = Camera.open();
+            mParameters = m_Camera.getParameters();
+
+        } catch(Exception ex){}
+    }
+
+    public void CloseCameraTure()
+    {
+        try{
+            m_Camera.release();
+
+        } catch(Exception ex){}
+    }
 }
