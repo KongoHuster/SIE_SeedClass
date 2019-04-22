@@ -2,8 +2,8 @@ package e.yizii.sie;
 
 import android.Manifest;
 import android.content.pm.PackageManager;
+import android.graphics.Color;
 import android.hardware.Camera;
-import android.icu.util.Measure;
 import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
@@ -21,14 +21,13 @@ import java.io.IOException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import javax.crypto.spec.OAEPParameterSpec;
 
 
 public class MainActivity extends AppCompatActivity {
 
     boolean buttonSet = true;
     private static final String TAG = "MainActivity";
-    private Button button1, button2,button3;
+    private Button button1, button2,button3,button4;
     private ImageView imageView;
     private Boolean Stop = false;
     private EditText editText,editText3;
@@ -45,6 +44,7 @@ public class MainActivity extends AppCompatActivity {
         button1 = findViewById(R.id.button);
         button2 = findViewById(R.id.button2);
         button3 = findViewById(R.id.button3);
+        button4 = findViewById(R.id.button4);
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             if (checkSelfPermission(Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
@@ -186,8 +186,6 @@ public class MainActivity extends AppCompatActivity {
         button2.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 Looper looper = Looper.myLooper();//取得当前线程里的looper
-                final MyHandler mHandler = new MyHandler(looper);//构造一个handler使之可与looper通信
-                final textHandler textHandler = new textHandler(looper);//构造一个handler使之可与looper通信
                 if (buttonSet == true) {
                     button2.setText("关闭");
                     imageView.setVisibility(View.VISIBLE);
@@ -200,104 +198,35 @@ public class MainActivity extends AppCompatActivity {
                         public void run() {
                             Log.i(TAG, "run: ");
                             buttonSet = false;
-
                             int texthead = 0x55;
-                            OpenCameraTure();
+                            long tureTime = System.currentTimeMillis();
+                            long falseTime = System.currentTimeMillis();
                             boolean[] result = hexToBool(texthead);
-                            mHandler.removeMessages(0);
-                            textHandler.removeMessages(0);
-                            Message message = textHandler.obtainMessage(1, 1, 1, "0x" + Integer.toHexString(0x55));
-                            textHandler.sendMessage(message);
-
-                            for (int i = 0; i < result.length; i++) {
-                                if (result[i] == true) {
-//                                    OpenCameraTure();
-                                    OpenCamera();
-                                    msgStr[0] = Withe;
-                                } else {
-                                    msgStr[0] = Black;
-                                    CloseCamera();
-                                }
-                                Message m = mHandler.obtainMessage(1, 1, 1, msgStr[0]);//构造要传递的消息
-                                mHandler.sendMessage(m);//发送消息:系统会自动调用handleMessage方法来处理消息
-                                try {
-                                    Thread.sleep(50);
-                                } catch (InterruptedException e) {
-                                    e.printStackTrace();
-                                }
-                            }
-
-                            if (buttonSet == false)
-                            {
-                                for (int head = 0x01; buttonSet==false; head++) {
-                                    result = hexToBool(head);
-                                    mHandler.removeMessages(0);
-                                    textHandler.removeMessages(0);
-                                    message = textHandler.obtainMessage(1, 1, 1, "0x" + Integer.toHexString(head));
-                                    textHandler.sendMessage(message);
-
-                                    for (int i = 0; i < result.length; i++) {
-                                        if (result[i] == true) {
-                                            msgStr[0] = Withe;
-//                                            OpenCameraTure();
-
-                                            OpenCamera();
-                                        } else {
-                                            msgStr[0] = Black;
-                                            CloseCamera();
-                                        }
-                                        Message m = mHandler.obtainMessage(1, 1, 1, msgStr[0]);//构造要传递的消息
-                                        mHandler.sendMessage(m);//发送消息:系统会自动调用handleMessage方法来处理消息
-                                        try {
-                                            Thread.sleep(50);
-                                        } catch (InterruptedException e) {
-                                            e.printStackTrace();
-                                        }
+                            Stop = false;
+                            while (!Stop) {
+                                for (int i = 0; i < result.length; i++) {
+                                    if (result[i] == true) {
+                                        tureTime = System.currentTimeMillis();
+                                        Log.i(TAG, "run: " + Long.toString(Math.abs(tureTime-falseTime)));
+                                        button4.setBackgroundColor(Color.WHITE);
+                                    } else {
+                                        falseTime = System.currentTimeMillis();
+                                        Log.i(TAG, "run: " + Long.toString(Math.abs(tureTime-falseTime)));
+                                        button4.setBackgroundColor(Color.BLACK);
                                     }
 
-                                    if(head == 0x40)
-                                        buttonSet=true;
+                                    try {
+                                        Thread.sleep(49);
+                                    } catch (InterruptedException e) {
+                                        e.printStackTrace();
+                                    }
                                 }
                             }
-
-                            //添加0x0D
-                            int end = 0x0D;
-                            result = hexToBool(end);
-                            mHandler.removeMessages(0);
-                            textHandler.removeMessages(0);
-                            message = textHandler.obtainMessage(1, 1, 1, "0x" + Integer.toHexString(0x0D));
-                            textHandler.sendMessage(message);
-
-                            for (int i = 0; i < result.length; i++) {
-                                if (result[i] == true) {
-                                    msgStr[0] = Withe;
-                                    OpenCamera();
-                                } else {
-                                    msgStr[0] = Black;
-                                    CloseCamera();
-                                }
-                                Message m = mHandler.obtainMessage(1, 1, 1, msgStr[0]);//构造要传递的消息
-                                mHandler.sendMessage(m);//发送消息:系统会自动调用handleMessage方法来处理消息
-                                try {
-                                    Thread.sleep(50);
-                                } catch (InterruptedException e) {
-                                    e.printStackTrace();
-                                }
-                            }
-
-                            message = textHandler.obtainMessage(1, 1, 1, "结束");
-                            textHandler.sendMessage(message);
-
                         }
                     };
                     thread.start();
                 }else {
                     button2.setText("测试");
-                    imageView.setVisibility(View.INVISIBLE);
-                    CloseCameraTure();
-                    textHandler.removeMessages(0);
-                    Message message = textHandler.obtainMessage(1, 1, 1, "0x0");
-                    textHandler.sendMessage(message);
                     buttonSet = true;
                     Stop = true;
                 }
@@ -311,25 +240,12 @@ public class MainActivity extends AppCompatActivity {
                     final textHandler textHandler = new textHandler(looper);//构造一个handler使之可与looper通信
                     if (buttonSet == true) {
                         button3.setText("关闭");
-                        imageView.setVisibility(View.VISIBLE);
-                        final String[] msgStr = {""};
-                        mHandler.removeMessages(0);
-                        textHandler.removeMessages(0);
-                        Message message = textHandler.obtainMessage(1, 1, 1, "0x" + Integer.toHexString(0x01));
-                        textHandler.sendMessage(message);
-
-//                        OpenCameraTure();
-                        OpenCamera();
-
-                        msgStr[0] = Withe;
-                        Message m = mHandler.obtainMessage(1, 1, 1, msgStr[0]);//构造要传递的消息
-                        mHandler.sendMessage(m);
+                        button4.setBackgroundColor(Color.BLACK);
                         buttonSet = false;
 
                     }else {
                         button3.setText("常亮");
-                        imageView.setVisibility(View.INVISIBLE);
-//                        CloseCamera();
+                        button4.setBackgroundColor(Color.WHITE);
                         textHandler.removeMessages(0);
                         Message message = textHandler.obtainMessage(1, 1, 1, "0x0");
                         textHandler.sendMessage(message);
