@@ -36,8 +36,8 @@ public class MainActivity extends AppCompatActivity {
     private String Black = "black";
     private Camera.Parameters mParameters;
 
-    private long sleepTime = 500;
-    private long sleepTimeTrue = sleepTime;
+    private long sleepTime = 192;
+    private long sleepTimeTrue = 192;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -185,28 +185,16 @@ public class MainActivity extends AppCompatActivity {
 
         button2.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                sleepTime = Integer.parseInt(editTextNumber.getText().toString());
+                sleepTime = sleepTimeTrue = Integer.parseInt(editTextNumber.getText().toString());
                 Looper looper = Looper.myLooper();//取得当前线程里的looper
                 final textHandler textHandler = new textHandler(looper);//构造一个handler使之可与looper通信
                 if (buttonSet == true) {
                     button2.setText("关闭");
                     imageView.setVisibility(View.VISIBLE);
-                    Font16 font16 = new Font16(getApplication().getApplicationContext());
-
-                    boolean[][] arr = new boolean[0][];
-                    try {
-                        arr = font16.drawString(editText.getText().toString());
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-
-                    final boolean[][] finalArr = arr;
                     final Thread thread = new Thread() {
                         @Override
                         public void run() {
-                            Log.i(TAG, "run: ");
                             buttonSet = false;
-
                             int texthead = 0xff;
                             long tureTime = System.currentTimeMillis();
                             long falseTime = System.currentTimeMillis();
@@ -219,11 +207,11 @@ public class MainActivity extends AppCompatActivity {
                             for (int i = 0; i < result.length && !Stop; i++) {
                                 if (result[i] == true) {
                                     tureTime = System.currentTimeMillis();
-                                    Log.i(TAG, "run: " + Long.toString(Math.abs(tureTime - falseTime)));
+//                                    Log.i(TAG, "run: " + Long.toString(Math.abs(tureTime - falseTime)));
                                     button4.setBackgroundColor(Color.WHITE);
                                 } else {
                                     falseTime = System.currentTimeMillis();
-                                    Log.i(TAG, "run: " + Long.toString(Math.abs(tureTime - falseTime)));
+//                                    Log.i(TAG, "run: " + Long.toString(Math.abs(tureTime - falseTime)));
                                     button4.setBackgroundColor(Color.BLACK);
                                 }
 
@@ -263,14 +251,26 @@ public class MainActivity extends AppCompatActivity {
                                 for (int i = 0; i < result.length && !Stop; i++) {
                                     if (result[i] == true) {
                                         tureTime = System.currentTimeMillis();
-                                        Log.i(TAG, "runHead: " + Long.toString(Math.abs(tureTime-falseTime)));
+                                        runTime = Math.abs(tureTime-falseTime);
+                                        Log.i(TAG, "runHead: " + Long.toString(Math.abs(runTime)));
+                                        editText.setText(Long.toString(Math.abs(runTime)));
                                         button4.setBackgroundColor(Color.WHITE);
                                     } else {
                                         falseTime = System.currentTimeMillis();
-                                        Log.i(TAG, "runHead: " + Long.toString(Math.abs(tureTime-falseTime)));
+                                        runTime = Math.abs(tureTime-falseTime);
+                                        Log.i(TAG, "runHead: " + Long.toString(Math.abs(runTime)));
+                                        editText.setText(Long.toString(Math.abs(runTime)));
                                         button4.setBackgroundColor(Color.BLACK);
                                     }
+                                    tureTime = System.currentTimeMillis();
+                                    falseTime = System.currentTimeMillis();
 
+                                    runTimeAll = runTimeAll + runTime;
+                                    sleepTime = sleepTimeTrue - (runTimeAll - (1+i) * sleepTimeTrue);
+//                                    Log.i(TAG, "runTimeAll: " + runTimeAll);
+//                                    Log.i(TAG, "runTrueTime: " + (i+1) * sleepTimeTrue);
+                                    Log.d(TAG, "sleepTime: " + sleepTime +  " ruTime " + Long.toString(runTime)+" run: "+ Integer.toString(i+1));
+                                    Log.d(TAG, "sleepTimeAll: " + Long.toString(runTimeAll) + " sleepTimeTrue: "+ Long.toString((1+i) * sleepTimeTrue));
 
                                     try {
                                         if(Stop == true)
@@ -298,7 +298,7 @@ public class MainActivity extends AppCompatActivity {
 
 
                             textHandler.removeMessages(0);
-                            message = textHandler.obtainMessage(1, 1, 1, "0x15");
+                            message = textHandler.obtainMessage(1, 1, 1, "0x25");
                             textHandler.sendMessage(message);
                             texthead = 0x15;
                             result = hexToBool(texthead);
@@ -308,24 +308,26 @@ public class MainActivity extends AppCompatActivity {
                                     if (result[i] == true) {
                                         tureTime = System.currentTimeMillis();
                                         runTime = Math.abs(tureTime-falseTime);
-                                        Log.i(TAG, "runHead: " + Long.toString(Math.abs(runTime)));
+                                        runTimeAll = runTimeAll + runTime;
+                                        Log.i(TAG, "runBody: " + Long.toString(Math.abs(runTime)));
                                         editText.setText(Long.toString(Math.abs(runTime)));
                                         button4.setBackgroundColor(Color.WHITE);
                                     } else {
                                         falseTime = System.currentTimeMillis();
                                         runTime = Math.abs(tureTime-falseTime);
-                                        Log.i(TAG, "runHead: " + Long.toString(Math.abs(runTime)));
+                                        runTimeAll = runTimeAll + runTime;
+                                        Log.i(TAG, "runBody: " + Long.toString(Math.abs(runTime)));
                                         editText.setText(Long.toString(Math.abs(runTime)));
                                         button4.setBackgroundColor(Color.BLACK);
                                     }
                                     tureTime = System.currentTimeMillis();
                                     falseTime = System.currentTimeMillis();
 
-                                    runTimeAll = runTimeAll + runTime;
-                                    sleepTime = sleepTime - (runTimeAll - (k*8+i+1) * sleepTimeTrue);
-                                    Log.i(TAG, "runTimeAll: " + runTimeAll);
-                                    Log.i(TAG, "runTrueTime: " + (k*8+i+1) * sleepTimeTrue);
-                                    Log.d(TAG, "sleepTime: " + sleepTime);
+                                    sleepTime = sleepTimeTrue - (runTimeAll - (k*8+i+9) * sleepTimeTrue);
+//                                    Log.i(TAG, "runTimeAll: " + runTimeAll);
+//                                    Log.i(TAG, "runTrueTime: " + (k*8+i+1+8) * sleepTimeTrue);
+                                    Log.d(TAG, "sleepTime: " + sleepTime + " ruTime " + Long.toString(runTime)+ " run: " + Integer.toString(k*8+i+1+8));
+                                    Log.d(TAG, "sleepTimeAll: " + Long.toString(runTimeAll) + " sleepTimeTrue: "+ Long.toString((k*8+i+9) * sleepTimeTrue));
 
                                     textHandler.removeMessages(0);
                                     message = textHandler.obtainMessage(1, 1, 1, String.valueOf(k*8+i));
@@ -354,43 +356,6 @@ public class MainActivity extends AppCompatActivity {
                                 return;
                             }
 
-//                            textHandler.removeMessages(0);
-//                            message = textHandler.obtainMessage(1, 1, 1, "body");
-//                            textHandler.sendMessage(message);
-//                            //body
-//                            for (int i = 0; i < finalArr.length && Stop == false; i++)
-//                            {
-//
-//                                for (int j = 0; j < finalArr[0].length; j++) {
-//                                    if (finalArr[i][j] == true) {
-//                                        tureTime = System.currentTimeMillis();
-//                                        Log.i(TAG, "runBody " + Integer.toString(i*16+j)  + " " + Long.toString(Math.abs(tureTime-falseTime)));
-//                                        button4.setBackgroundColor(Color.WHITE);
-//                                    } else {
-//                                        falseTime = System.currentTimeMillis();
-//                                        Log.i(TAG, "runBody " + Integer.toString(i*16+j)  + " " + Long.toString(Math.abs(tureTime-falseTime)));
-//                                        button4.setBackgroundColor(Color.BLACK);
-//                                    }
-//
-//                                    tureTime = System.currentTimeMillis();
-//                                    falseTime = System.currentTimeMillis();
-//
-//                                    if(Stop == true)
-//                                    {
-//                                        textHandler.removeMessages(0);
-//                                        message = textHandler.obtainMessage(1, 1, 1, "0x00");
-//                                        textHandler.sendMessage(message);
-//                                        return;
-//                                    }
-//
-//                                    try {
-//                                        Thread.sleep(sleepTime);
-//                                    } catch (InterruptedException e) {
-//                                        e.printStackTrace();
-//                                    }
-//                                }
-//                            }
-
                             if(Stop == true)
                             {
                                 textHandler.removeMessages(0);
@@ -400,21 +365,33 @@ public class MainActivity extends AppCompatActivity {
                             }
 
                             textHandler.removeMessages(0);
-                            message = textHandler.obtainMessage(1, 1, 1, "0x0D");
+                            message = textHandler.obtainMessage(1, 1, 1, "0x15");
                             textHandler.sendMessage(message);
 
 
                             for (int i = 0; i < result.length && !Stop; i++) {
                                 if (result[i] == true) {
                                     tureTime = System.currentTimeMillis();
-                                    Log.i(TAG, "runEnd: " + Long.toString(Math.abs(tureTime-falseTime)));
+                                    runTime = Math.abs(tureTime-falseTime);
+                                    runTimeAll = runTimeAll + runTime;
+                                    Log.i(TAG, "runEnd: " + Long.toString(Math.abs(runTime)));
+                                    editText.setText(Long.toString(Math.abs(runTime)));
                                     button4.setBackgroundColor(Color.WHITE);
                                 } else {
                                     falseTime = System.currentTimeMillis();
-                                    Log.i(TAG, "runEnd: " + Long.toString(Math.abs(tureTime-falseTime)));
+                                    runTime = Math.abs(tureTime-falseTime);
+                                    runTimeAll = runTimeAll + runTime;
+                                    Log.i(TAG, "runEnd: " + Long.toString(Math.abs(runTime)));
+                                    editText.setText(Long.toString(Math.abs(runTime)));
                                     button4.setBackgroundColor(Color.BLACK);
                                 }
+                                tureTime = System.currentTimeMillis();
+                                falseTime = System.currentTimeMillis();
 
+                                sleepTime = sleepTimeTrue - (runTimeAll - (8+i+128+1) * sleepTimeTrue);
+//                                Log.i(TAG, "runTrueTime: " + (8+i+129) * sleepTimeTrue);
+                                Log.d(TAG, "sleepTime: " + sleepTime + " ruTime " + Long.toString(runTime)+ " run: " + Integer.toString(8+i+129));
+                                Log.d(TAG, "sleepTimeAll: " + Long.toString(runTimeAll) + " sleepTimeTrue: "+ Long.toString((8+i+128+1) * sleepTimeTrue));
 
                                 try {
                                     if(Stop == true)
@@ -428,7 +405,11 @@ public class MainActivity extends AppCompatActivity {
                                 } catch (InterruptedException e) {
                                     e.printStackTrace();
                                 }
+
                             }
+
+                            Log.i(TAG, "sleepTimeAll: " + runTimeAll);
+
                             textHandler.removeMessages(0);
                             message = textHandler.obtainMessage(1, 1, 1, "0x00");
                             textHandler.sendMessage(message);
@@ -469,9 +450,20 @@ public class MainActivity extends AppCompatActivity {
             }
 
         });
+
 }
 
 
+    private void checkStop()
+    {
+        if(Stop == true)
+        {
+            textHandler.removeMessages(0);
+            Message message = textHandler.obtainMessage(1, 1, 1, "0x00");
+            textHandler.sendMessage(message);
+            return;
+        }
+    }
 
     private class MyHandler extends Handler{
      public MyHandler(Looper looper){
@@ -530,43 +522,4 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
-
-    public void OpenCamera() {
-        try{
-            m_Camera = Camera.open();
-            Camera.Parameters mParameters;
-            mParameters = m_Camera.getParameters();
-            mParameters.setFlashMode(Camera.Parameters.FLASH_MODE_TORCH);
-            m_Camera.setParameters(mParameters);
-        } catch(Exception ex){}
-
-
-    }
-
-    public void CloseCamera() {
-        try{
-            Camera.Parameters mParameters;
-            mParameters = m_Camera.getParameters();
-            mParameters.setFlashMode(Camera.Parameters.FLASH_MODE_OFF);
-            m_Camera.setParameters(mParameters);
-            m_Camera.release();
-        } catch(Exception ex){}
-    }
-
-    public void OpenCameraTure()
-    {
-        try{
-            m_Camera = Camera.open();
-            mParameters = m_Camera.getParameters();
-
-        } catch(Exception ex){}
-    }
-
-    public void CloseCameraTure()
-    {
-        try{
-            m_Camera.release();
-
-        } catch(Exception ex){}
-    }
 }
