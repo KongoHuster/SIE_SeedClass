@@ -35,9 +35,12 @@ public class MainActivity extends AppCompatActivity {
     private long BlackTime = System.currentTimeMillis();
     private long sleepTime = 192;
     private long sleepTimeTrue = 192;
+    private long sleepTimeTrueAll = 0;
+
     private long runTime = 0;
     private long runTimeAll = 0;
-
+    Looper looper = Looper.myLooper();//取得当前线程里的looper
+    final textHandler textHandler = new textHandler(looper);//构造一个handler使之可与looper通信
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -48,7 +51,8 @@ public class MainActivity extends AppCompatActivity {
         buttonOrder2 = findViewById(R.id.button2);
         buttonOrder3 = findViewById(R.id.button3);
         buttonOrder4 = findViewById(R.id.button4);
-        
+        sendMessage(textHandler, "White");
+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             if (checkSelfPermission(Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
                 requestPermissions(new String[]{Manifest.permission.CAMERA}, 1);
@@ -166,28 +170,27 @@ public class MainActivity extends AppCompatActivity {
         buttonOrder2.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 sleepTime = sleepTimeTrue = Integer.parseInt(editTextNumber.getText().toString());
-                Looper looper = Looper.myLooper();//取得当前线程里的looper
-                final textHandler textHandler = new textHandler(looper);//构造一个handler使之可与looper通信
                 if (buttonSet == true) {
                     buttonOrder2.setText("关闭");
-                    imageView.setVisibility(View.VISIBLE);
+//                    imageView.setVisibility(View.VISIBLE);
                     final Thread thread = new Thread() {
                         @Override
                         public void run() {
                             buttonSet = false;
                             int texthead = 0xff;
-                            boolean[] result = hexToBool(texthead);
                             Stop = false;
 
                             sendMessage(textHandler,"0xff");
-
+                            boolean[] result = hexToBool(texthead);
+                            sendCheckMsg(result);
                             for (int i = 0; i < result.length && !Stop; i++) {
                                 if (result[i] == true) {
                                     WhiteTime = System.currentTimeMillis();
-                                    buttonOrder4.setBackgroundColor(Color.WHITE);
+                                    sendMessage(textHandler, "White");
                                 } else {
                                     BlackTime = System.currentTimeMillis();
-                                    buttonOrder4.setBackgroundColor(Color.BLACK);
+//                                    buttonOrder4.setBackgroundColor(Color.BLACK);
+                                    sendMessage(textHandler, "Black");
                                 }
                                 try {
                                     if (checkStop(textHandler)) {
@@ -198,6 +201,8 @@ public class MainActivity extends AppCompatActivity {
                                     e.printStackTrace();
                                 }
                             }
+
+
                             if (checkStop(textHandler)){
                                 return;
                             }
@@ -210,11 +215,7 @@ public class MainActivity extends AppCompatActivity {
                             for (int k = 0; k < 1; k++) {
                                 Log.d(TAG, "run: " + k);
                                 for (int i = 0; i < result.length && !Stop; i++) {
-                                    ChangeColor(result[i]);
-                                    sleepTime = sleepTimeTrue - (runTimeAll - sleepTimeTrue);
-                                    Log.d(TAG, "sleepTime: " + sleepTime + " ruTime " + Long.toString(runTime) + " run: " + Integer.toString(i + 1));
-                                    Log.d(TAG, "sleepTimeAll: " + Long.toString(runTimeAll) + " sleepTimeTrue: " + Long.toString(sleepTimeTrue));
-
+                                    ChangeColor(result[i],i + 1);
                                     try {
                                         if (checkStop(textHandler)) {
                                             return;
@@ -231,17 +232,14 @@ public class MainActivity extends AppCompatActivity {
                             }
 
                             //报文
-                            sendMessage(textHandler, "0x25");
-                            texthead = 0x15;
+//                            sendMessage(textHandler, "0x25");
+                            texthead = 0x25;
                             result = hexToBool(texthead);
                             for (int k = 0; k <= 15; k++) {
                                 Log.d(TAG, "run: " + k);
                                 for (int i = 0; i < result.length && !Stop; i++) {
-                                    ChangeColor(result[i]);
-                                    Log.d(TAG, "sleepTime: " + sleepTime + " ruTime " + Long.toString(runTime) + " run: " + Integer.toString(k * 8 + i + 1 + 8));
-                                    Log.d(TAG, "sleepTimeAll: " + Long.toString(runTimeAll) + " sleepTimeTrue: " + Long.toString(sleepTimeTrue));
-
-                                    sendMessage(textHandler,String.valueOf(k * 8 + i));
+                                    ChangeColor(result[i],k * 8 + i + 1 + 8);
+                                    sendMessage(textHandler, String.valueOf(k * 8 + i));
                                     try {
                                         if (Stop == true) {
                                             sendMessage(textHandler,"0x0");
@@ -253,18 +251,15 @@ public class MainActivity extends AppCompatActivity {
                                     }
                                 }
                             }
-
                             if (checkStop(textHandler)) {
                                 return;
                             }
-
                             //报尾
+                            texthead = 0x15;
+                            result = hexToBool(texthead);
                             sendMessage(textHandler,"0x15");
                             for (int i = 0; i < result.length && !Stop; i++) {
-                                ChangeColor(result[i]);
-                                Log.d(TAG, "sleepTime: " + sleepTime + " ruTime " + Long.toString(runTime) + " run: " + Integer.toString(8 + i + 129));
-                                Log.d(TAG, "sleepTimeAll: " + Long.toString(runTimeAll) + " sleepTimeTrue: " + Long.toString(sleepTimeTrue));
-
+                                ChangeColor(result[i],8 + i + 129);
                                 try {
                                     if (checkStop(textHandler)) {
                                         return;
@@ -276,8 +271,8 @@ public class MainActivity extends AppCompatActivity {
                             }
                             Log.i(TAG, "sleepTimeAll: " + runTimeAll);
                             sendMessage(textHandler,"0x00");
-                            buttonOrder4.setBackgroundColor(Color.BLACK);
-
+//                            buttonOrder4.setBackgroundColor(Color.BLACK);
+                            sendMessage(textHandler, "Black");
                         }
                     };
                     thread.start();
@@ -294,16 +289,17 @@ public class MainActivity extends AppCompatActivity {
         buttonOrder3.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 if (buttonSet == true) {
-                    buttonOrder3.setText("关闭");
+                    buttonOrder3.setText("常亮");
                     buttonOrder4.setBackgroundColor(Color.BLACK);
                     buttonSet = false;
 
                 } else {
                     Looper looper = Looper.myLooper();//取得当前线程里的looper
                     final textHandler textHandler = new textHandler(looper);//构造一个handler使之可与looper通信
-                    buttonOrder3.setText("常亮");
+                    buttonOrder3.setText("关闭");
                     buttonOrder4.setBackgroundColor(Color.WHITE);
                     sendMessage(textHandler,"0x00");
+                    buttonSet = true;
                 }
             }
 
@@ -311,27 +307,54 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-    private void ChangeColor(boolean result)
+
+    private void sendCheckMsg(boolean[] result){
+        for (int i = 0; i < result.length && !Stop; i++) {
+            if (result[i] == true) {
+                WhiteTime = System.currentTimeMillis();
+                sendMessage(textHandler, "White");
+            } else {
+                BlackTime = System.currentTimeMillis();
+//                                    buttonOrder4.setBackgroundColor(Color.BLACK);
+                sendMessage(textHandler, "Black");
+            }
+            try {
+                if (checkStop(textHandler)) {
+                    return;
+                }
+                Thread.sleep(sleepTime);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    private void ChangeColor(boolean result, int i)
     {
         if (result == true) {
             WhiteTime = System.currentTimeMillis();
             runTime = Math.abs(WhiteTime - BlackTime);
             runTimeAll = runTimeAll + runTime;
             Log.i(TAG, "runTime: " + Long.toString(Math.abs(runTime)));
-            editText.setText(Long.toString(Math.abs(runTime)));
-            buttonOrder4.setBackgroundColor(Color.WHITE);
+//            editText.setText(Long.toString(Math.abs(runTime)));
+//            buttonOrder4.setBackgroundColor(Color.WHITE);
+            sendMessage(textHandler, "White");
         } else {
             BlackTime = System.currentTimeMillis();
             runTime = Math.abs(WhiteTime - BlackTime);
             runTimeAll = runTimeAll + runTime;
             Log.i(TAG, "runTime: " + Long.toString(Math.abs(runTime)));
-            editText.setText(Long.toString(Math.abs(runTime)));
-            buttonOrder4.setBackgroundColor(Color.BLACK);
+//            editText.setText(Long.toString(Math.abs(runTime)));
+//            buttonOrder4.setBackgroundColor(Color.BLACK);
+            sendMessage(textHandler, "Black");
         }
         WhiteTime = System.currentTimeMillis();
         BlackTime = System.currentTimeMillis();
-        sleepTime = sleepTimeTrue - (runTimeAll - sleepTimeTrue);
-        sleepTimeTrue += sleepTimeTrue;
+        sleepTimeTrueAll = sleepTimeTrueAll + sleepTimeTrue;
+        sleepTime = sleepTimeTrue - (runTimeAll - sleepTimeTrueAll);
+
+        Log.d(TAG, "sleepTime: " + sleepTime + " ruTime " + Long.toString(runTime) + " run: " + Integer.toString(i));
+        Log.d(TAG, "runTimeAll: " + Long.toString(runTimeAll) + " sleepTimeTrueAll: " + Long.toString(sleepTimeTrueAll));
 
     }
 
@@ -395,8 +418,18 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public void handleMessage(Message msg) {//处理消息
             Log.d(TAG, "handleMessage: ");
-            editText3.setText(msg.obj.toString());
+            if (msg.obj.toString().equals("White"))
+            {
+                buttonOrder4.setBackgroundColor(Color.WHITE);
 
+            }else if (msg.obj.toString().equals("Black"))
+            {
+                buttonOrder4.setBackgroundColor(Color.BLACK);
+
+            }else
+            {
+                editText3.setText(msg.obj.toString());
+            }
         }
     }
 
@@ -412,7 +445,7 @@ public class MainActivity extends AppCompatActivity {
 
     private boolean[] hexToBool(int hex) {
         boolean[] result = new boolean[8];
-        for (int i = 7; i > 0; i--) {
+        for (int i = 7; i >= 0; i--) {
             if ((hex & 0x01) == 0x01) {
                 result[i] = true;
             } else {
