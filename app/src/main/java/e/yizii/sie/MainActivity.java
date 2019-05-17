@@ -79,7 +79,7 @@ public class MainActivity extends AppCompatActivity {
                     Stop = false;
                     Font16 font16 = new Font16(getApplication().getApplicationContext());
                     try {
-                        final boolean[][] arr = font16.drawString(input);
+                        final boolean[][][] arr = font16.drawString(input);
                         imageView.setVisibility(View.VISIBLE);
                         Looper looper = Looper.myLooper();//取得当前线程里的looper
                         final MyHandler mHandler = new MyHandler(looper);//构造一个handler使之可与looper通信
@@ -113,7 +113,7 @@ public class MainActivity extends AppCompatActivity {
 
                                     for (int j = 0; j < arr[0].length; j++) {
                                         mHandler.removeMessages(0);
-                                        if (arr[i][j] == true) {
+                                        if (arr[0][i][j] == true) {
                                             msgStr[0] = Withe;
 //                                            OpenCamera();
                                         } else {
@@ -179,57 +179,72 @@ public class MainActivity extends AppCompatActivity {
                             int texthead;
                             Stop = false;
 
-                            sendMessage(textHandler,"0xff");
-                            boolean[] result = hexToBool(0xff);
-                            sendCheckMsg(result);
+                            String input = editText.getText().toString();
+                            Font16 font16 = new Font16(getApplication().getApplicationContext());
 
+                            try {
 
-                            sendMessage(textHandler,"0x55");
-                            result = hexToBool(0x55);
-                            sendCheckMsg(result);
+                                final boolean[][][] arr = font16.drawString(input);
+                                sendMessage(textHandler,"0xff");
+                                boolean[] result = hexToBool(0xff);
+                                sendCheckMsg(result);
 
-                            //报文
-//                            sendMessage(textHandler, "0x25");
-                            WhiteTime = System.currentTimeMillis();
-                            BlackTime = System.currentTimeMillis();
-                            texthead = 0x25;
-                            result = hexToBool(texthead);
-                            for (int k = 0; k <= 63; k++) {
-                                if (k%2 == 0){
-                                    sendMessage(textHandler,"0xE");
-                                    sendShortCheckMsg(hexToBool(0xFE));
-                                }
-                                for (int i = 0; i < result.length && !Stop; i++) {
-                                    ChangeColor(result[i],k * 8 + i + 1 + 8);
-                                    sendMessage(textHandler, String.valueOf(k * 8 + i));
-                                    try {
-                                        if (Stop) {
-                                            sendMessage(textHandler,"0x0");
-                                            return;
+                                sendMessage(textHandler,"0x55");
+                                WhiteTime = System.currentTimeMillis();
+                                BlackTime = System.currentTimeMillis();
+                                result = hexToBool(0x55);
+                                sendShortCheckMsg(result);
+                                sendShortCheckMsg(result);
+
+//                                texthead = 0x25;
+//                                result = hexToBool(texthead);
+                                for (int j = 0; j < 2; j++) {
+                                    for (int k = 0; k <= 32; k++) {
+                                        if (k%2 == 0){
+                                            sendMessage(textHandler,"0xE");
+                                            sendShortCheckMsg(hexToBool(0xFE));
                                         }
-                                        Thread.sleep(sleepTime);
-                                    } catch (InterruptedException e) {
-                                        e.printStackTrace();
-                                    }
+
+                                        //转化数据
+
+                                        for (int i = 0; i < 8 && !Stop; i++) {
+                                            ChangeColor(arr[j][(k/2)][k%2 + i],k * 8 + i + 1 + 8);
+                                            sendMessage(textHandler, String.valueOf(k * 8 + i));
+                                            try {
+                                                if (Stop) {
+                                                    sendMessage(textHandler,"0x0");
+                                                    return;
+                                                }
+                                                Thread.sleep(sleepTime);
+                                            } catch (InterruptedException e) {
+                                                e.printStackTrace();
+                                            }
+                                        }
                                 }
+
+                                }
+                                if (checkStop(textHandler)) {
+                                    return;
+                                }
+
+                                //报尾
+                                result = hexToBool(0xFE);
+                                sendMessage(textHandler,"0xE");
+                                sendShortCheckMsg(result);
+
+                                sendMessage(textHandler,"0x15");
+                                sendShortCheckMsg(hexToBool(0x01));
+                                sendShortCheckMsg(hexToBool(0x05));
+
+
+                                Log.i(TAG, "sleepTimeAll: " + runTimeAll);
+                                sendMessage(textHandler,"0x00");
+                                sendMessage(textHandler, "Black");
+                            } catch (IOException e) {
+                                e.printStackTrace();
                             }
-                            if (checkStop(textHandler)) {
-                                return;
-                            }
-
-                            //报尾
-                            result = hexToBool(0xFE);
-                            sendMessage(textHandler,"0xE");
-                            sendSpecialCheckMsg(result);
-
-                            result = hexToBool(0x15);
-                            sendMessage(textHandler,"0x15");
-                            sendCheckMsg(result);
 
 
-                            Log.i(TAG, "sleepTimeAll: " + runTimeAll);
-                            sendMessage(textHandler,"0x00");
-                            sendMessage(textHandler, "Black");
                         }
                     };
                     thread.start();
@@ -286,26 +301,6 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-    private void sendSpecialCheckMsg(boolean[] result){
-        for (int i = 4; i < result.length && !Stop; i++) {
-            if (result[i] == true) {
-                sendMessage(textHandler, "White");
-            } else {
-                sendMessage(textHandler, "Black");
-            }
-
-            try {
-                if (Stop) {
-                    sendMessage(textHandler,"0x0");
-                    return;
-                }
-                Thread.sleep(sleepTime);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        }
-
-    }
 
     private void sendShortCheckMsg(boolean[] result){
         for (int i = 4; i < result.length && !Stop; i++) {
@@ -318,6 +313,7 @@ public class MainActivity extends AppCompatActivity {
                 runTime = Math.abs(WhiteTime - BlackTime);
                 sendMessage(textHandler, "Black");
             }
+
             WhiteTime = System.currentTimeMillis();
             BlackTime = System.currentTimeMillis();
             runTimeAll += runTime;
