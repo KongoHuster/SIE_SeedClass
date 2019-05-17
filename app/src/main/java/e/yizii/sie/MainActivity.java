@@ -35,7 +35,7 @@ public class MainActivity extends AppCompatActivity {
     private long BlackTime = System.currentTimeMillis();
     private long sleepTime = 192;
     private long sleepTimeTrue = 192;
-    private long sleepTimeTrueAll = 0;
+    private long sleepTimeTrueAll = -192;
 
     private long runTime = 0;
     private long runTimeAll = 0;
@@ -170,78 +170,40 @@ public class MainActivity extends AppCompatActivity {
         buttonOrder2.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 sleepTime = sleepTimeTrue = Integer.parseInt(editTextNumber.getText().toString());
-                if (buttonSet == true) {
+                if (buttonSet) {
                     buttonOrder2.setText("关闭");
-//                    imageView.setVisibility(View.VISIBLE);
                     final Thread thread = new Thread() {
                         @Override
                         public void run() {
                             buttonSet = false;
-                            int texthead = 0xff;
+                            int texthead;
                             Stop = false;
 
                             sendMessage(textHandler,"0xff");
-                            boolean[] result = hexToBool(texthead);
+                            boolean[] result = hexToBool(0xff);
                             sendCheckMsg(result);
-                            for (int i = 0; i < result.length && !Stop; i++) {
-                                if (result[i] == true) {
-                                    WhiteTime = System.currentTimeMillis();
-                                    sendMessage(textHandler, "White");
-                                } else {
-                                    BlackTime = System.currentTimeMillis();
-//                                    buttonOrder4.setBackgroundColor(Color.BLACK);
-                                    sendMessage(textHandler, "Black");
-                                }
-                                try {
-                                    if (checkStop(textHandler)) {
-                                        return;
-                                    }
-                                    Thread.sleep(sleepTime);
-                                } catch (InterruptedException e) {
-                                    e.printStackTrace();
-                                }
-                            }
 
 
-                            if (checkStop(textHandler)){
-                                return;
-                            }
-
-                            //报头
                             sendMessage(textHandler,"0x55");
-                            texthead = 0x55;
-                            result = hexToBool(texthead);
-
-                            for (int k = 0; k < 1; k++) {
-                                Log.d(TAG, "run: " + k);
-                                for (int i = 0; i < result.length && !Stop; i++) {
-                                    ChangeColor(result[i],i + 1);
-                                    try {
-                                        if (checkStop(textHandler)) {
-                                            return;
-                                        }
-                                        Thread.sleep(sleepTime);
-                                    } catch (InterruptedException e) {
-                                        e.printStackTrace();
-                                    }
-                                }
-                            }
-
-                            if (checkStop(textHandler)) {
-                                return;
-                            }
+                            result = hexToBool(0x55);
+                            sendCheckMsg(result);
 
                             //报文
 //                            sendMessage(textHandler, "0x25");
+                            WhiteTime = System.currentTimeMillis();
+                            BlackTime = System.currentTimeMillis();
                             texthead = 0x25;
                             result = hexToBool(texthead);
-                            for (int k = 0; k <= 15; k++) {
-                                Log.d(TAG, "run: " + k);
+                            for (int k = 0; k <= 63; k++) {
+                                if (k%2 == 0){
+                                    sendMessage(textHandler,"0xE");
+                                    sendShortCheckMsg(hexToBool(0xFE));
+                                }
                                 for (int i = 0; i < result.length && !Stop; i++) {
                                     ChangeColor(result[i],k * 8 + i + 1 + 8);
                                     sendMessage(textHandler, String.valueOf(k * 8 + i));
                                     try {
-                                        if (Stop == true) {
+                                        if (Stop) {
                                             sendMessage(textHandler,"0x0");
                                             return;
                                         }
@@ -254,24 +216,19 @@ public class MainActivity extends AppCompatActivity {
                             if (checkStop(textHandler)) {
                                 return;
                             }
+
                             //报尾
-                            texthead = 0x15;
-                            result = hexToBool(texthead);
+                            result = hexToBool(0xFE);
+                            sendMessage(textHandler,"0xE");
+                            sendSpecialCheckMsg(result);
+
+                            result = hexToBool(0x15);
                             sendMessage(textHandler,"0x15");
-                            for (int i = 0; i < result.length && !Stop; i++) {
-                                ChangeColor(result[i],8 + i + 129);
-                                try {
-                                    if (checkStop(textHandler)) {
-                                        return;
-                                    }
-                                    Thread.sleep(sleepTime);
-                                } catch (InterruptedException e) {
-                                    e.printStackTrace();
-                                }
-                            }
+                            sendCheckMsg(result);
+
+
                             Log.i(TAG, "sleepTimeAll: " + runTimeAll);
                             sendMessage(textHandler,"0x00");
-//                            buttonOrder4.setBackgroundColor(Color.BLACK);
                             sendMessage(textHandler, "Black");
                         }
                     };
@@ -288,7 +245,7 @@ public class MainActivity extends AppCompatActivity {
 
         buttonOrder3.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                if (buttonSet == true) {
+                if (buttonSet) {
                     buttonOrder3.setText("常亮");
                     buttonOrder4.setBackgroundColor(Color.BLACK);
                     buttonSet = false;
@@ -311,15 +268,35 @@ public class MainActivity extends AppCompatActivity {
     private void sendCheckMsg(boolean[] result){
         for (int i = 0; i < result.length && !Stop; i++) {
             if (result[i] == true) {
-                WhiteTime = System.currentTimeMillis();
                 sendMessage(textHandler, "White");
             } else {
-                BlackTime = System.currentTimeMillis();
-//                                    buttonOrder4.setBackgroundColor(Color.BLACK);
                 sendMessage(textHandler, "Black");
             }
+
             try {
-                if (checkStop(textHandler)) {
+                if (Stop) {
+                    sendMessage(textHandler,"0x0");
+                    return;
+                }
+                Thread.sleep(sleepTimeTrue);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+
+    }
+
+    private void sendSpecialCheckMsg(boolean[] result){
+        for (int i = 4; i < result.length && !Stop; i++) {
+            if (result[i] == true) {
+                sendMessage(textHandler, "White");
+            } else {
+                sendMessage(textHandler, "Black");
+            }
+
+            try {
+                if (Stop) {
+                    sendMessage(textHandler,"0x0");
                     return;
                 }
                 Thread.sleep(sleepTime);
@@ -327,34 +304,65 @@ public class MainActivity extends AppCompatActivity {
                 e.printStackTrace();
             }
         }
+
     }
+
+    private void sendShortCheckMsg(boolean[] result){
+        for (int i = 4; i < result.length && !Stop; i++) {
+            if (result[i] == true) {
+                WhiteTime = System.currentTimeMillis();
+                runTime = Math.abs(WhiteTime - BlackTime);
+                sendMessage(textHandler, "White");
+            } else {
+                BlackTime = System.currentTimeMillis();
+                runTime = Math.abs(WhiteTime - BlackTime);
+                sendMessage(textHandler, "Black");
+            }
+            WhiteTime = System.currentTimeMillis();
+            BlackTime = System.currentTimeMillis();
+            runTimeAll += runTime;
+            sleepTimeTrueAll = sleepTimeTrueAll + sleepTimeTrue;
+            sleepTime = sleepTimeTrue - (runTimeAll - sleepTimeTrueAll);
+
+
+            Log.d(TAG,  "sleepTime " + Long.toString(sleepTime));
+            Log.d(TAG,  "runTimeAll " + Long.toString(runTimeAll));
+            Log.d(TAG,  "sleepTimeTrueAll " + Long.toString(sleepTimeTrueAll));
+            try {
+                if (Stop == true) {
+                    sendMessage(textHandler,"0x0");
+                    return;
+                }
+                Thread.sleep(sleepTime);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+
+    }
+
+
 
     private void ChangeColor(boolean result, int i)
     {
         if (result == true) {
             WhiteTime = System.currentTimeMillis();
             runTime = Math.abs(WhiteTime - BlackTime);
-            runTimeAll = runTimeAll + runTime;
-            Log.i(TAG, "runTime: " + Long.toString(Math.abs(runTime)));
-//            editText.setText(Long.toString(Math.abs(runTime)));
-//            buttonOrder4.setBackgroundColor(Color.WHITE);
             sendMessage(textHandler, "White");
         } else {
             BlackTime = System.currentTimeMillis();
             runTime = Math.abs(WhiteTime - BlackTime);
-            runTimeAll = runTimeAll + runTime;
-            Log.i(TAG, "runTime: " + Long.toString(Math.abs(runTime)));
-//            editText.setText(Long.toString(Math.abs(runTime)));
-//            buttonOrder4.setBackgroundColor(Color.BLACK);
             sendMessage(textHandler, "Black");
         }
         WhiteTime = System.currentTimeMillis();
         BlackTime = System.currentTimeMillis();
+        runTimeAll += runTime;
+
         sleepTimeTrueAll = sleepTimeTrueAll + sleepTimeTrue;
         sleepTime = sleepTimeTrue - (runTimeAll - sleepTimeTrueAll);
-
-        Log.d(TAG, "sleepTime: " + sleepTime + " ruTime " + Long.toString(runTime) + " run: " + Integer.toString(i));
-        Log.d(TAG, "runTimeAll: " + Long.toString(runTimeAll) + " sleepTimeTrueAll: " + Long.toString(sleepTimeTrueAll));
+        Log.d(TAG,  "sleepTime " + Long.toString(sleepTime));
+        Log.d(TAG,  "runTimeAll " + Long.toString(runTimeAll));
+        Log.d(TAG,  "sleepTimeTrueAll " + Long.toString(sleepTimeTrueAll));
 
     }
 
@@ -400,7 +408,6 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         public void handleMessage(Message msg) {//处理消息
-            Log.d(TAG, "handleMessage: ");
             if (msg.obj.toString().equals(Withe)) {
                 imageView.setImageResource(R.mipmap.withe);
             } else {
@@ -417,7 +424,6 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         public void handleMessage(Message msg) {//处理消息
-            Log.d(TAG, "handleMessage: ");
             if (msg.obj.toString().equals("White"))
             {
                 buttonOrder4.setBackgroundColor(Color.WHITE);
