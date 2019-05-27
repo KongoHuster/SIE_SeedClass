@@ -93,19 +93,18 @@ public class MainActivity extends AppCompatActivity {
                                 sendShortCheckMsg(result);
 
                                 for (int j = 0; j < 2; j++) {
-                                    for (int k = 0; k < 32; k++) {
-//                                        if (k%2 == 0){
-                                            sendMessage(textHandler,"0xE");
-                                            sendShortCheckMsg(hexToBool(0xFE));
-//                                        }
-
+                                    for (int k = 0; k < 16; k++) {
                                         //转化数据
-                                        for (int i = 0; i < 8 && !Stop; i++) {
-                                            ChangeColor(arr[j][(k/2)][k%2 + i],k * 8 + i + 1 + 8);
-                                            sendMessage(textHandler, String.valueOf(j*256 + k * 8 + i));
+                                        for (int i = 0; i < 16 && !Stop; i++) {
+                                            if (i%8 == 0) {
+                                                sendMessage(textHandler, "0xE");
+                                                sendShortCheckMsg(hexToBool(0xFE));
+                                            }
+                                            ChangeColor(arr[j][(i)][k],k * 16 + i + 1 + 8);
+                                            sendMessage(textHandler, String.valueOf(j*256 + k * 16 + i));
                                             try {
                                                 if (Stop) {
-                                                    sendMessage(textHandler,"0x0");
+                                                   sendMessage(textHandler,"0x0");
                                                     return;
                                                 }
                                                 Thread.sleep(sleepTime);
@@ -180,10 +179,10 @@ public class MainActivity extends AppCompatActivity {
 
                                 for (int j = 0; j < 2; j++) {
                                     for (int k = 0; k < 32; k++) {
-                                        if (k%2 == 0){
-                                            sendMessage(textHandler,"0xE");
-                                            sendShortCheckMsg(hexToBool(0xFE));
-                                        }
+//                                        if (k%2 == 0){
+                                        sendMessage(textHandler,"0xE");
+                                        sendShortCheckMsg(hexToBool(0xFE));
+//                                        }
 
                                         result = hexToBool(0x1A);
                                         //转化数据
@@ -200,7 +199,7 @@ public class MainActivity extends AppCompatActivity {
                                                 e.printStackTrace();
                                             }
                                         }
-                                }
+                                    }
 
                                 }
                                 if (checkStop(textHandler)) {
@@ -208,9 +207,9 @@ public class MainActivity extends AppCompatActivity {
                                 }
 
                                 //报尾
+                                result = hexToBool(0xFE);
                                 sendMessage(textHandler,"0xE");
-                                sendShortCheckMsg(hexToBool(0x0F));
-                                sendShortCheckMsg(hexToBool(0x0E));
+                                sendShortCheckMsg(result);
 
                                 sendMessage(textHandler,"0x15");
                                 sendShortCheckMsg(hexToBool(0x01));
