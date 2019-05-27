@@ -94,10 +94,10 @@ public class MainActivity extends AppCompatActivity {
 
                                 for (int j = 0; j < 2; j++) {
                                     for (int k = 0; k < 32; k++) {
-                                        if (k%2 == 0){
+//                                        if (k%2 == 0){
                                             sendMessage(textHandler,"0xE");
                                             sendShortCheckMsg(hexToBool(0xFE));
-                                        }
+//                                        }
 
                                         //转化数据
                                         for (int i = 0; i < 8 && !Stop; i++) {
@@ -185,15 +185,10 @@ public class MainActivity extends AppCompatActivity {
                                             sendShortCheckMsg(hexToBool(0xFE));
                                         }
 
+                                        result = hexToBool(0x1A);
                                         //转化数据
                                         for (int i = 0; i < 8 && !Stop; i++) {
-//                                            ChangeColor(arr[j][(k/2)][k%2 + i],k * 8 + i + 1 + 8);
-                                            if (i%2==0)
-                                            {
-                                                ChangeColor(true,k * 8 + i + 1 + 8);
-                                            }else {
-                                                ChangeColor(false,k * 8 + i + 1 + 8);
-                                            }
+                                            ChangeColor(result[i],k * 8 + i + 1 + 8);
                                             sendMessage(textHandler, String.valueOf(j*256 + k * 8 + i));
                                             try {
                                                 if (Stop) {
@@ -213,9 +208,9 @@ public class MainActivity extends AppCompatActivity {
                                 }
 
                                 //报尾
-                                result = hexToBool(0xFE);
                                 sendMessage(textHandler,"0xE");
-                                sendShortCheckMsg(result);
+                                sendShortCheckMsg(hexToBool(0x0F));
+                                sendShortCheckMsg(hexToBool(0x0E));
 
                                 sendMessage(textHandler,"0x15");
                                 sendShortCheckMsg(hexToBool(0x01));
