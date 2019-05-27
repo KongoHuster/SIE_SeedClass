@@ -67,108 +67,6 @@ public class MainActivity extends AppCompatActivity {
 
         buttonOrder1.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                sleepTime = Integer.parseInt(editTextNumber.getText().toString());
-                if (buttonSet == true) {
-                    String input = editText.getText().toString();
-
-                    if (!checkInputIsEmpty(input)) {
-                        return;
-                    }
-
-                    buttonOrder1.setText("关闭");
-                    Stop = false;
-                    Font16 font16 = new Font16(getApplication().getApplicationContext());
-                    try {
-                        final boolean[][][] arr = font16.drawString(input);
-                        imageView.setVisibility(View.VISIBLE);
-                        Looper looper = Looper.myLooper();//取得当前线程里的looper
-                        final MyHandler mHandler = new MyHandler(looper);//构造一个handler使之可与looper通信
-                        final String[] msgStr = {""};
-                        Thread thread = new Thread() {
-                            @Override
-                            public void run() {
-
-                                //添加0x55
-                                int head = 0x55;
-                                boolean[] result = hexToBool(head);
-                                mHandler.removeMessages(0);
-
-                                for (int i = 0; i < result.length; i++) {
-                                    if (result[i] == true) {
-                                        msgStr[0] = Withe;
-                                    } else {
-                                        msgStr[0] = Black;
-                                    }
-                                    Message m = mHandler.obtainMessage(1, 1, 1, msgStr[0]);//构造要传递的消息
-                                    mHandler.sendMessage(m);//发送消息:系统会自动调用handleMessage方法来处理消息
-                                    try {
-                                        Thread.sleep(sleepTime);
-                                    } catch (InterruptedException e) {
-                                        e.printStackTrace();
-                                    }
-                                }
-
-                                //body
-                                for (int i = 0; i < arr.length && Stop == false; i++) {
-
-                                    for (int j = 0; j < arr[0].length; j++) {
-                                        mHandler.removeMessages(0);
-                                        if (arr[0][i][j] == true) {
-                                            msgStr[0] = Withe;
-//                                            OpenCamera();
-                                        } else {
-                                            msgStr[0] = Black;
-//                                            CloseCamera();
-                                        }
-                                        Message m = mHandler.obtainMessage(1, 1, 1, msgStr[0]);//构造要传递的消息
-                                        mHandler.sendMessage(m);//发送消息:系统会自动调用handleMessage方法来处理消息
-                                        try {
-                                            Thread.sleep(sleepTime);
-                                        } catch (InterruptedException e) {
-                                            e.printStackTrace();
-                                        }
-                                    }
-                                }
-
-                                //添加0x0D
-                                int end = 0x0D;
-                                result = hexToBool(end);
-                                mHandler.removeMessages(0);
-
-                                for (int i = 0; i < result.length; i++) {
-                                    if (result[i] == true) {
-                                        msgStr[0] = Withe;
-                                    } else {
-                                        msgStr[0] = Black;
-                                    }
-
-                                    try {
-                                        Thread.sleep(sleepTime);
-                                    } catch (InterruptedException e) {
-                                        e.printStackTrace();
-                                    }
-                                }
-                            }
-                        };
-
-                        thread.start();
-                        buttonSet = false;
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-
-                } else {
-                    buttonOrder1.setText("打开");
-                    imageView.setVisibility(View.INVISIBLE);
-                    buttonSet = true;
-                    Stop = true;
-                }
-
-            }
-        });
-
-        buttonOrder2.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
                 sleepTime = sleepTimeTrue = Integer.parseInt(editTextNumber.getText().toString());
                 if (buttonSet) {
                     buttonOrder2.setText("关闭");
@@ -176,14 +74,12 @@ public class MainActivity extends AppCompatActivity {
                         @Override
                         public void run() {
                             buttonSet = false;
-                            int texthead;
                             Stop = false;
 
                             String input = editText.getText().toString();
                             Font16 font16 = new Font16(getApplication().getApplicationContext());
 
                             try {
-
                                 final boolean[][][] arr = font16.drawString(input);
                                 sendMessage(textHandler,"0xff");
                                 boolean[] result = hexToBool(0xff);
@@ -196,20 +92,109 @@ public class MainActivity extends AppCompatActivity {
                                 sendShortCheckMsg(result);
                                 sendShortCheckMsg(result);
 
-//                                texthead = 0x25;
-//                                result = hexToBool(texthead);
                                 for (int j = 0; j < 2; j++) {
-                                    for (int k = 0; k <= 32; k++) {
+                                    for (int k = 0; k < 32; k++) {
                                         if (k%2 == 0){
                                             sendMessage(textHandler,"0xE");
                                             sendShortCheckMsg(hexToBool(0xFE));
                                         }
 
                                         //转化数据
-
                                         for (int i = 0; i < 8 && !Stop; i++) {
                                             ChangeColor(arr[j][(k/2)][k%2 + i],k * 8 + i + 1 + 8);
-                                            sendMessage(textHandler, String.valueOf(k * 8 + i));
+                                            sendMessage(textHandler, String.valueOf(j*256 + k * 8 + i));
+                                            try {
+                                                if (Stop) {
+                                                    sendMessage(textHandler,"0x0");
+                                                    return;
+                                                }
+                                                Thread.sleep(sleepTime);
+                                            } catch (InterruptedException e) {
+                                                e.printStackTrace();
+                                            }
+                                        }
+                                    }
+
+                                }
+                                if (checkStop(textHandler)) {
+                                    return;
+                                }
+
+                                //报尾
+                                result = hexToBool(0xFE);
+                                sendMessage(textHandler,"0xE");
+                                sendShortCheckMsg(result);
+
+                                sendMessage(textHandler,"0x15");
+                                sendShortCheckMsg(hexToBool(0x01));
+                                sendShortCheckMsg(hexToBool(0x05));
+
+
+                                Log.i(TAG, "sleepTimeAll: " + runTimeAll);
+                                sendMessage(textHandler,"0x00");
+                                sendMessage(textHandler, "Black");
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            }
+
+
+                        }
+                    };
+                    thread.start();
+                } else {
+                    buttonOrder2.setText("测试");
+                    editText3.setText("");
+                    buttonSet = true;
+                    Stop = true;
+
+                }
+            }
+        });
+
+        buttonOrder2.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                sleepTime = sleepTimeTrue = Integer.parseInt(editTextNumber.getText().toString());
+                if (buttonSet) {
+                    buttonOrder2.setText("关闭");
+                    final Thread thread = new Thread() {
+                        @Override
+                        public void run() {
+                            buttonSet = false;
+                            Stop = false;
+
+                            String input = editText.getText().toString();
+                            Font16 font16 = new Font16(getApplication().getApplicationContext());
+
+                            try {
+                                final boolean[][][] arr = font16.drawString(input);
+                                sendMessage(textHandler,"0xff");
+                                boolean[] result = hexToBool(0xff);
+                                sendCheckMsg(result);
+
+                                sendMessage(textHandler,"0x55");
+                                WhiteTime = System.currentTimeMillis();
+                                BlackTime = System.currentTimeMillis();
+                                result = hexToBool(0x55);
+                                sendShortCheckMsg(result);
+                                sendShortCheckMsg(result);
+
+                                for (int j = 0; j < 2; j++) {
+                                    for (int k = 0; k < 32; k++) {
+                                        if (k%2 == 0){
+                                            sendMessage(textHandler,"0xE");
+                                            sendShortCheckMsg(hexToBool(0xFE));
+                                        }
+
+                                        //转化数据
+                                        for (int i = 0; i < 8 && !Stop; i++) {
+//                                            ChangeColor(arr[j][(k/2)][k%2 + i],k * 8 + i + 1 + 8);
+                                            if (i%2==0)
+                                            {
+                                                ChangeColor(true,k * 8 + i + 1 + 8);
+                                            }else {
+                                                ChangeColor(false,k * 8 + i + 1 + 8);
+                                            }
+                                            sendMessage(textHandler, String.valueOf(j*256 + k * 8 + i));
                                             try {
                                                 if (Stop) {
                                                     sendMessage(textHandler,"0x0");
